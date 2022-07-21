@@ -2,6 +2,11 @@
 
 This is a small POC to attempt proxying requests from a locally running HAC Core application to KCP for development purposes. The proxy is needed to add CORS headers so that the KCP API server responds to requests from HAC Core.
 
+
+```
+npm install
+```
+
 The following environment variables need to be set:
 ```bash
 # URL for KCP Server (eg. https://<kcp-host>/clusters/root:rh-sso-<org_id>).
