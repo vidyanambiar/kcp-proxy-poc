@@ -30,7 +30,7 @@ const apiProxy = proxy(kcpHost, {
     /**
      * The endpoint /clusters/root:rh-sso-1585019/apis/tenancy.kcp.dev/v1beta1/workspaces
      * redirects to /services/workspaces/system:admin/all/apis/tenancy.kcp.dev/v1beta1/workspaces
-     * and we need to add the CORS header on the redirect as well
+     * Proxying to the redirect URL here so that the CORS headers are present on the request
      */
     if (requestedPath.includes('/apis/tenancy.kcp.dev/v1beta1/workspaces')) {
       updatedPath = redirectPathForWorkspaces + requestedPath;
