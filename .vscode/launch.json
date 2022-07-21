@@ -8,7 +8,12 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Program",
-      "program": "${workspaceFolder}/server.js"
+      "program": "${workspaceFolder}/server.js",
+      "env": {
+        "DEBUG": "express-http-proxy",
+        "KCP_SERVER_URL" : "https://kcp-stable.apps.kcp-internal-1.52p3.p1.openshiftapps.com/clusters/root:rh-sso-15850190",
+        "HAC_CORE_ORIGIN": "https://prod.foo.redhat.com:1337"
+      }
     }
   ]
 }
