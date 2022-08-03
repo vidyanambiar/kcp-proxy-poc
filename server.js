@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import proxy from 'express-http-proxy';
 import url from 'url';
+import { WebSocketServer } from 'ws';
 
 // Check for required environment variables
 if (!process.env.KCP_SERVER_URL || !process.env.HAC_CORE_ORIGIN) {
@@ -27,9 +28,6 @@ const apiProxy = proxy(kcpHost, {
   proxyReqPathResolver: req => {
     const requestedPath = url.parse(req.originalUrl).path;
     let updatedPath = kcpPath + url.parse(req.originalUrl).path;
-    if (requestedPath === '/api/v1') {
-      console.log('updatedPath: ', updatedPath);
-    }
     /**
      * The endpoint /clusters/root:rh-sso-1585019/apis/tenancy.kcp.dev/v1beta1/workspaces
      * redirects to /services/workspaces/system:admin/all/apis/tenancy.kcp.dev/v1beta1/workspaces
@@ -44,6 +42,20 @@ const apiProxy = proxy(kcpHost, {
 
 app.use(['/apis', '/api/v1'], apiProxy);
 
-app.listen(3000, () => {
+// Start server
+const server = app.listen(3000, () => {
   console.log('Proxy server listening on port 3000');
+});
+
+// Enable WebSockets support
+const ws = new WebSocketServer({ noServer: true });
+ws.on('connection', ws => {
+  console.log('Client connected.');
+});
+
+server.on('upgrade', (request, socket, head) => {
+  ws.handleUpgrade(request, socket, head, (websocket) => {
+    console.log('Upgrade to handle websockets');
+    ws.emit('connection', websocket, request);
+  });
 });
