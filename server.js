@@ -10,10 +10,11 @@ if (!process.env.KCP_SERVER_URL || !process.env.HAC_CORE_ORIGIN) {
   process.exit(1);
 }
 
+const contextWorkspace = process.env.KCP_SERVER_URL.split("/").pop();
 const kcpServerURL = new URL(process.env.KCP_SERVER_URL);
 const kcpHost = kcpServerURL.origin;
 const kcpPath = kcpServerURL.pathname;
-const redirectPathForWorkspaces = '/services/workspaces/root:rh-sso-15850190/all';
+const redirectPathForWorkspaces = `/services/workspaces/${contextWorkspace}`;
 
 const app = express();
 
@@ -34,7 +35,11 @@ const apiProxy = proxy(kcpHost, {
      * Proxying to the redirect URL here so that the CORS headers are present on the request
      */
     if (requestedPath.includes('/apis/tenancy.kcp.dev/v1beta1/workspaces')) {
-      updatedPath = redirectPathForWorkspaces + requestedPath;
+      if (req.method === 'POST') {
+        updatedPath = redirectPathForWorkspaces + '/personal/apis/tenancy.kcp.dev/v1beta1/workspaces';  // Create - Doesn't work with the workspace name in the path
+      } else {
+        updatedPath = redirectPathForWorkspaces + '/all' + requestedPath;
+      }
     }
     return updatedPath;
   },
