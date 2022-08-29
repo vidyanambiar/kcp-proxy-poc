@@ -24,26 +24,34 @@ app.use(cors({
   credentials: true
 }));
 
-// Proxy to KCP server
-const apiProxy = proxy(kcpHost, {
+const proxyOptions = {
   proxyReqPathResolver: req => {
     const requestedPath = url.parse(req.originalUrl).path;
     let updatedPath = kcpPath + url.parse(req.originalUrl).path;
+
     /**
-     * The endpoint /clusters/root:rh-sso-1585019/apis/tenancy.kcp.dev/v1beta1/workspaces
-     * redirects to /services/workspaces/system:admin/all/apis/tenancy.kcp.dev/v1beta1/workspaces
-     * Proxying to the redirect URL here so that the CORS headers are present on the request
+     * The redirects for the "workspaces" APIs are different based on the KCP host server & the request method:
+     * 1. kcp-stable:
+     *    GET/DELETE requests on /clusters/<workspace>/apis/.. redirect to /services/workspaces/<workspace>/all/apis/..
+     *    POST requests on /clusters/<workspace>/apis/.. redirect to /services/workspaces/<workspace>/personal/apis/..
+     * 2. kcp-unstable:
+     *    requests on /clusters/<workspace>/apis/.. redirect to /services/workspaces/<workspace>/apis/..
      */
     if (requestedPath.includes('/apis/tenancy.kcp.dev/v1beta1/workspaces')) {
-      if (req.method === 'POST') {
-        updatedPath = redirectPathForWorkspaces + '/personal/apis/tenancy.kcp.dev/v1beta1/workspaces';  // Create - Doesn't work with the workspace name in the path
+      if (kcpHost.includes('kcp-unstable')) {
+        // Create - Doesn't work with the workspace name in the path
+        updatedPath = req.method === 'POST' ? (redirectPathForWorkspaces + '/apis/tenancy.kcp.dev/v1beta1/workspaces') : (redirectPathForWorkspaces + requestedPath);
       } else {
-        updatedPath = redirectPathForWorkspaces + '/all' + requestedPath;
+        // Create - Doesn't work with the workspace name in the path
+        updatedPath = req.method === 'POST' ? (redirectPathForWorkspaces + '/personal/apis/tenancy.kcp.dev/v1beta1/workspaces') : (redirectPathForWorkspaces + '/all' + requestedPath);
       }
     }
     return updatedPath;
   },
-});
+};
+
+// Proxy to KCP server
+const apiProxy = proxy(kcpHost, proxyOptions);
 
 app.use(['/apis', '/api/v1'], apiProxy);
 
