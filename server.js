@@ -29,24 +29,14 @@ const proxyOptions = {
     const requestedPath = url.parse(req.originalUrl).path;
     let updatedPath = kcpPath + url.parse(req.originalUrl).path;
 
-    /**
-     * The redirects for the "workspaces" APIs are different based on the KCP host server & the request method:
-     * 1. kcp-stable:
-     *    GET/DELETE requests on /clusters/<workspace>/apis/.. redirect to /services/workspaces/<workspace>/all/apis/..
-     *    POST requests on /clusters/<workspace>/apis/.. redirect to /services/workspaces/<workspace>/personal/apis/..
-     * 2. kcp-unstable:
-     *    requests on /clusters/<workspace>/apis/.. redirect to /services/workspaces/<workspace>/apis/..
-     */
     if (requestedPath.includes('/apis/tenancy.kcp.dev/v1beta1/workspaces')) {
-      if (kcpHost.includes('kcp-unstable')) {
-        // Create - Doesn't work with the workspace name in the path
-        updatedPath = req.method === 'POST' ? (redirectPathForWorkspaces + '/apis/tenancy.kcp.dev/v1beta1/workspaces') : (redirectPathForWorkspaces + requestedPath);
-      } else {
-        // Create - Doesn't work with the workspace name in the path
-        updatedPath = req.method === 'POST' ? (redirectPathForWorkspaces + '/personal/apis/tenancy.kcp.dev/v1beta1/workspaces') : (redirectPathForWorkspaces + '/all' + requestedPath);
-      }
+      // Create - Doesn't work with the workspace name in the path
+      updatedPath = req.method === 'POST' ? (redirectPathForWorkspaces + '/apis/tenancy.kcp.dev/v1beta1/workspaces') : (redirectPathForWorkspaces + requestedPath);
     }
     return updatedPath;
+  },
+  userResDecorator: function(proxyRes, proxyResData, userReq, userRes) {
+    return proxyResData;
   },
 };
 
