@@ -31,7 +31,7 @@ const proxyOptions = {
 
     if (requestedPath.includes('/apis/tenancy.kcp.dev/v1beta1/workspaces')) {
       // Create - Doesn't work with the workspace name in the path
-      updatedPath = req.method === 'POST' ? (redirectPathForWorkspaces + '/apis/tenancy.kcp.dev/v1beta1/workspaces') : (redirectPathForWorkspaces + requestedPath);
+      updatedPath = req.method === 'POST' ? (kcpPath + '/apis/tenancy.kcp.dev/v1beta1/workspaces') : updatedPath;
     }
     return updatedPath;
   },
