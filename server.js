@@ -7,14 +7,15 @@ import { WebSocketServer } from 'ws';
 // Check for required environment variables
 if (!process.env.KCP_SERVER_URL || !process.env.HAC_CORE_ORIGIN) {
   throw new Error('Set environment variables KCP_SERVER_URL and HAC_CORE_ORIGIN');
-  process.exit(1);
 }
 
-const contextWorkspace = process.env.KCP_SERVER_URL.split("/").pop();
 const kcpServerURL = new URL(process.env.KCP_SERVER_URL);
 const kcpHost = kcpServerURL.origin;
 const kcpPath = kcpServerURL.pathname;
-const redirectPathForWorkspaces = `/services/workspaces/${contextWorkspace}`;
+
+/** Commenting this out for now as the KCP APIs in stable/unstable don't seem to have the 307 redirect anymore */
+// const contextWorkspace = process.env.KCP_SERVER_URL.split("/").pop();  // The last segment of the KCP_SERVER_URL contains the workspace context (the workspace within which all the API calls will be made)
+// const redirectPathForWorkspaces = `/services/workspaces/${contextWorkspace}`;
 
 const app = express();
 
@@ -30,19 +31,15 @@ const proxyOptions = {
     let updatedPath = kcpPath + url.parse(req.originalUrl).path;
 
     if (requestedPath.includes('/apis/tenancy.kcp.dev/v1beta1/workspaces')) {
-      // Create - Doesn't work with the workspace name in the path
+      // "Create workspace" doesn't work with the workspace name in the path
       updatedPath = req.method === 'POST' ? (kcpPath + '/apis/tenancy.kcp.dev/v1beta1/workspaces') : updatedPath;
     }
     return updatedPath;
-  },
-  userResDecorator: function(proxyRes, proxyResData, userReq, userRes) {
-    return proxyResData;
   },
 };
 
 // Proxy to KCP server
 const apiProxy = proxy(kcpHost, proxyOptions);
-
 app.use(['/apis', '/api/v1'], apiProxy);
 
 // Start server
