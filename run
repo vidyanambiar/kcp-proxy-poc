@@ -1,0 +1,8 @@
+# cd root
+kubectl ws
+# cd appstudio
+kubectl ws appstudio
+# will include the workspace context etc
+export KCP_SERVER_URL=$(oc whoami --show-server)
+echo "Connecting to API Server: $KCP_SERVER_URL"
+HAC_CORE_ORIGIN=https://prod.foo.redhat.com:1337 node server.js

@@ -29,7 +29,9 @@ const proxyOptions = {
   proxyReqPathResolver: req => {
     const requestedPath = url.parse(req.originalUrl).path;
     let updatedPath = kcpPath + url.parse(req.originalUrl).path;
-
+     
+    console.log(`PROXY [ requestedPath ${requestedPath} ]`); 
+    console.log(`PROXY [ updatedPath ${updatedPath} ]`);  
     if (requestedPath.includes('/apis/tenancy.kcp.dev/v1beta1/workspaces')) {
       // "Create workspace" doesn't work with the workspace name in the path
       updatedPath = req.method === 'POST' ? (kcpPath + '/apis/tenancy.kcp.dev/v1beta1/workspaces') : updatedPath;
@@ -38,9 +40,15 @@ const proxyOptions = {
   },
 };
 
+let logstatus = (req, res, next) => {  
+  console.log(`PROXY [ ${req.method}:${req.url} ${res.statusCode} ]`);
+  next();
+};
+
 // Proxy to KCP server
 const apiProxy = proxy(kcpHost, proxyOptions);
-app.use(['/apis', '/api/v1'], apiProxy);
+app.use(logstatus);
+app.use(['/apis', '/api/v1'], apiProxy); 
 
 // Start server
 const server = app.listen(3000, () => {
